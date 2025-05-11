@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -e
+
+data_url='https://ziglang.org/download/index.json'
+arch="$(uname -m)-linux"
+
+output_json=$(curl -s $data_url)
+
+last_version=$(echo $output_json | jq -r '.master .version')
+version="master"
+if [[ "$1" = "--skip-master" ]]; then
+last_version=$(echo $output_json | jq 'keys - ["master"]' | jq -r 'max_by(split(".") | map(tonumber))')
+version=$last_version
+fi
+
+current_version=""
+if command -v zig 2>&1 >/dev/null
+then
+	current_version=$(zig version)
+fi
+
+if [[ "$current_version" = "$last_version" ]]; then
+	echo "Zig already in newest version"
+	exit 0
+fi
+
+jq_args="--arg version "$version" --arg arch "$arch
+
+update_date="$(echo $output_json | jq -r $jq_args '.[$version] .date')"
+echo "updating zig to $last_version from $update_date ..."
+
+download_url=$(echo $output_json | jq -r $jq_args '.[$version] [$arch] .tarball')
+checksum=$(echo $output_json | jq -r $jq_args '.[$version] [$arch] .shasum')
+size=$(echo $output_json | jq -r $jq_args '.[$version] [$arch] .size')
+
+tar_filename="zig.tar.xz"
+wget -q --show-progress --progress=bar -O $tar_filename $download_url
+
+if [[ "$(wc -c $tar_filename | awk '{print $1}')" != "$size" ]]; then
+	echo "file size missmatch"
+	exit 1
+fi
+
+echo "$checksum  $tar_filename" | shasum --check -
+
+if [[ -d zig ]]; then rm -r zig; fi
+mkdir -p zig
+tar -xf $tar_filename --strip-components=1 --directory zig
+
+bin_name="zig-"$(echo "$last_version" | sed 's/-.*//' | sed 's/0\.\([0-9]*\)\.\([0-9]*\)/\1-\2/' | sed 's/-0$//')
+
+mkdir -p ${HOME}/zig/bin ${HOME}/zig/$bin_name
+
+cp -rf zig/* ${HOME}/zig/$bin_name
+ln -s "../$bin_name/zig" "${HOME}/zig/bin/$bin_name"
+ln -sf "$bin_name" ${HOME}/zig/bin/zig
+
+rm -r zig $tar_filename
+
+echo "finished 🚀"
+
