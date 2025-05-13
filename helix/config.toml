@@ -1,0 +1,4 @@
+theme = "vintage"
+
+[editor]
+true-color = true
