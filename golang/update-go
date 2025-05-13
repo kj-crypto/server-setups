@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -e
+
+URL="https://go.dev/dl/?mode=json"
+last_version=$(curl -s $URL | jq -r '.[0].version')
+
+update_go() {
+    echo "Updating Go to $last_version..."
+    wget -q --show-progress --progress=bar https://go.dev/dl/$last_version.linux-amd64.tar.gz
+    if [ -d /usr/local/go ]; then
+        sudo rm -rf /usr/local/go
+    fi
+    sudo tar -C /usr/local -xzf $last_version.linux-amd64.tar.gz
+    rm $last_version.linux-amd64.tar.gz
+}
+
+update_post_install() {
+    echo "Updating gopls ..."
+    go install golang.org/x/tools/gopls@latest
+
+    echo "Updating goimports ..."
+    go install golang.org/x/tools/cmd/goimports@latest
+
+    echo "Updating golangci-lint ..."
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+    echo "Updating delve ..."
+    go install github.com/go-delve/delve/cmd/dlv@latest
+}
+
+update_bashrc() {
+    path='export PATH=$PATH:/usr/local/go/bin'
+    if ! grep -q "$path" ~/.bashrc; then
+        echo "# go path" >> ~/.bashrc
+        echo "$path" >> ~/.bashrc
+    fi
+}
+
+
+if ! go version &> /dev/null; then
+    update_go
+    update_bashrc
+    source ~/.bashrc
+    update_post_install
+fi
+
+current_version=$(go version | awk '{print $3}')
+
+if [ $current_version = $last_version ]; then
+    echo "Go is already up to date."
+    update_post_install
+    exit 0
+fi
+
+update_go
+update_post_install
+echo "Updated 🚀"
+
