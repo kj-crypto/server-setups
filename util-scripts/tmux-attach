@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+
+if ! [ -z "${TMUX}" ]; then
+   echo "Execute outside tmux session"
+   exit 1
+fi
+
+
+session=$(tmux ls \
+-F "#{session_name}","#{session_windows}","#{t:session_created}" | \
+gum table \
+--separator="," \
+--columns="name","win","created" \
+--return-column=1)
+
+tmux attach -t $session
+
