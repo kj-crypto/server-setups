@@ -14,5 +14,7 @@ gum table \
 --columns="name","win","created" \
 --return-column=1)
 
-tmux attach -t $session
+if ! [ -z "$session" ]; then
+	tmux attach -t $session
+fi
 
