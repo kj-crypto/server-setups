@@ -6,13 +6,13 @@
  ```bash
  # get default profile and remove single quotation
  profile=$(gsettings get org.gnome.Terminal.ProfilesList default |  sed "s/'//g")
- 
+
  # dump current config
  dconf dump /org/gnome/terminal/legacy/profiles:/:$profile/ > current.backup
- 
+
  # update to Hack Nerd Font
  dconf write /org/gnome/terminal/legacy/profiles:/:$profile/font "'Hack Nerd Font Mono 12'"
- 
+
  # backup if needed by
  dconf load /org/gnome/terminal/legacy/profiles:/:$profile/ < current.backup
  ```

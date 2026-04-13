@@ -40,11 +40,10 @@ let g:zig_fmt_autosave = 0
 
 nnoremap <C-t> :NERDTreeRefreshRoot \| NERDTreeToggle<CR>
 
-" strip trailing whitespace on write
-autocmd BufWritePre * :%s/\s\+$//e
+let NERDTreeShowHidden=1
 
 " write and close current buffer
-command Wq write|bdelete
+command! Wq write|bdelete
 
 " switch between buffers without forcing file saving
 set hidden
@@ -72,5 +71,27 @@ function! CommentToggle(type)
     endif
 endfunction
 
-" zig template
-autocmd BufNewFile *.zig 0r ~/.vim/templates/zig_main_and_test_temp.zig
+nnoremap <C-n> :bn<CR>
+
+function! PrettierFormat()
+    let l:view = winsaveview()
+    let l:old_shortmess = &shortmess
+    set shortmess+=aF
+    silent! %!npx prettier --stdin-filepath % --single-quote --no-config
+    let &shortmess = l:old_shortmess
+    call winrestview(l:view)
+endfunction
+
+augroup FixOnSave
+    autocmd!
+    " strip trailing whitespace on write
+    autocmd BufWritePre * :%s/\s\+$//e
+    " run prettier
+    autocmd BufWritePost *.js,*.ts,*.json call PrettierFormat()
+augroup END
+
+augroup NewFile
+   " zig template
+   autocmd BufNewFile *.zig 0r ~/.vim/templates/zig_main_and_test_temp.zig
+augroup END
+
