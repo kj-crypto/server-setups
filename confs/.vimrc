@@ -77,7 +77,7 @@ function! PrettierFormat()
     let l:view = winsaveview()
     let l:old_shortmess = &shortmess
     set shortmess+=aF
-    silent! %!npx prettier --stdin-filepath % --single-quote --no-config
+    silent! %!npx prettier --stdin-filepath %
     let &shortmess = l:old_shortmess
     call winrestview(l:view)
 endfunction
