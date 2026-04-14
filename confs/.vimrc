@@ -84,25 +84,49 @@ endfunction
 
 nnoremap <C-n> :bn<CR>
 
-function! PrettierFormat()
-    let l:view = winsaveview()
-    let l:old_shortmess = &shortmess
-    set shortmess+=aF
-    silent! %!npx prettier --stdin-filepath %
-    let &shortmess = l:old_shortmess
-    call winrestview(l:view)
-endfunction
-
 augroup FixOnSave
     autocmd!
     " strip trailing whitespace on write
     autocmd BufWritePre * :%s/\s\+$//e
-    " run prettier
-    autocmd BufWritePost *.js,*.ts,*.json call PrettierFormat()
 augroup END
 
 augroup NewFile
+   autocmd!
    " zig template
    autocmd BufNewFile *.zig 0r ~/.vim/templates/zig_main_and_test_temp.zig
 augroup END
+
+" ALE fixers
+function! FPrettier(buffer) abort
+    return {
+    \  'command': 'npx prettier --stdin-filepath %s',
+    \  'read_temporary_file': 0,
+    \  'write_temporary_file': 1,
+    \}
+endfunction
+
+let g:ale_fixers = {
+\   'javascript': [function('FPrettier')],
+\   'typescript': [function('FPrettier')],
+\   'html': [function('FPrettier')],
+\   'css': [function('FPrettier')],
+\   'json': [function('FPrettier')],
+\}
+
+let g:ale_fix_on_save = 1
+let g:ale_sign_column_always = 1
+let g:ale_virtualtext_cursor = 1
+
+" ALE linter
+let g:ale_javascript_eslint_executable = 'npx'
+let g:ale_javascript_eslint_options = 'eslint'
+let g:ale_javascript_eslint_use_global = 0
+
+let g:ale_linters = {
+\   'javascript': ['eslint'],
+\   'css': ['eslint'],
+\}
+
+nmap <silent> [w <Plug>(ale_previous_wrap)
+nmap <silent> ]w <Plug>(ale_next_wrap)
 
