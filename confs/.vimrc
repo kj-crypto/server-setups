@@ -5,7 +5,13 @@ set path+=**
 set wildmenu
 
 set encoding=utf-8
-set t_Co=256
+set termguicolors
+" true colors tmux fix
+if &term =~# '^screen' || &term =~# '^tmux'
+  let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+  let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+endif
+
 set backspace=2
 set laststatus=2
 
@@ -21,16 +27,21 @@ call plug#begin()
 
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'NLKNguyen/papercolor-theme'
+Plug 'sainnhe/everforest'
 Plug 'preservim/nerdtree'
 Plug 'ryanoasis/vim-devicons'
 Plug 'ziglang/zig.vim'
+Plug 'dense-analysis/ale'
 
 call plug#end()
 
 " plugin setup
 set background=dark
-colorscheme PaperColor
+colorscheme everforest
+
+let g:everforest_background = 'medium'
+let g:everforest_enable_italic = 1
+let g:everforest_better_performance = 1
 
 let g:airline_theme='google_dark'
 let g:airline_powerline_fonts = 1
