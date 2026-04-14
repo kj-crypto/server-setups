@@ -22,20 +22,31 @@ dconf load /org/gnome/terminal/legacy/profiles:/:$profile/ < current.backup
 ## Tmux
 
 1. Use tmux 3.5 but <3.6 (older versions may not work correctly)
-2. Compile tmux from sources
+2. Compile `jemalloc` from sources.
 
 ```bash
-apt install -y libevent-dev libncurses-dev bison
+git clone https://github.com/jemalloc/jemalloc.git
+cd jemalloc
+./autogen.sh
+./configure --enable-prof --with-jemalloc-prefix=je_ --disable-shared
+make
+```
+
+3. Compile tmux from sources
+
+```bash
+apt install -y libevent-dev libncurses-dev bison libjemalloc-dev pkg-config
 curl -s https://api.github.com/repos/tmux/tmux/releases | grep 'download_url.*3\.5a\.tar' | grep -o 'http.*gz' | xargs wget
 tar -xvf *.tar.gz
-cd *.tar.gz
-./configure --enable-static
+cd tmux-3.5a
+LD ./configure --enable-static --enable-jemalloc
+./configure LDFLAGS="-L/<path-to-jemalloc>/lib" CPPFLAGS="-I/<path-to-jemalloc>/include" --enable-static --enable-jemalloc
 make
 ldd tmux
 ```
 
-3. Copy [confs/.tmux.conf](../confs/.tmux.conf) into `${HOME}/.tmux.conf`
-4. Run tmux and install plugins with `Prefix + I`
+4. Copy [confs/.tmux.conf](../confs/.tmux.conf) into `${HOME}/.tmux.conf`
+5. Run tmux and install plugins with `Prefix + I`
 
 #### Tmux hotfix
 
